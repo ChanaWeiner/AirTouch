@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "AirTouch Assistant",
+  "version": "1.0",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Open AirTouch"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["wasm/*", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
