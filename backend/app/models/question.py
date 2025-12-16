@@ -4,7 +4,7 @@ class QuestionRequest(BaseModel):
     """
     מודל Pydantic לגוף הבקשה ל-Gemini.
     """
-    full_transcript: str
+    video_url: str # שינינו מ-full_transcript ל-video_url
     user_question: str
 
 class GeminiResponse(BaseModel):

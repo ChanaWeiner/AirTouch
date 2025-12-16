@@ -5,6 +5,12 @@ from typing import Optional
 
 load_dotenv()
 
+ca_bundle_path = os.getenv("REQUESTS_CA_BUNDLE")
+if ca_bundle_path:
+    # אם הנתיב נמצא בקובץ .env, אנחנו מכניסים אותו ל-os.environ
+    # זה מבטיח שכל הספריות שמשתמשות ב-requests יראו אותו.
+    os.environ['REQUESTS_CA_BUNDLE'] = ca_bundle_path
+    print(f"Set REQUESTS_CA_BUNDLE to: {ca_bundle_path}") # וידוא
 
 class Settings:
     """מחזיק את משתני הסביבה והגדרות הבסיס."""
