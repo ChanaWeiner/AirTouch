@@ -1,18 +1,22 @@
-# app/main.py
-import ssl
-import os
+import requests
+import warnings
+from urllib3.exceptions import InsecureRequestWarning # עדכון קל לייבוא בגרסאות חדשות
+
+# --- תחילת המעקף של נתיב ---
+warnings.simplefilter('ignore', InsecureRequestWarning)
+
+old_request = requests.Session.request
+def new_request(self, method, url, *args, **kwargs):
+    kwargs['verify'] = False  # מבטל אימות SSL
+    return old_request(self, method, url, *args, **kwargs)
+
+requests.Session.request = new_request
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
 from app.api import gemini_router
-
-ssl._create_default_https_context = ssl._create_unverified_context
-
-# מבטל אימות בספריית requests
-os.environ['CURL_CA_BUNDLE'] = ""
-os.environ['PYTHONHTTPSVERIFY'] = '0'
 app = FastAPI(title="AirTouch API")
 
 app.add_middleware(
