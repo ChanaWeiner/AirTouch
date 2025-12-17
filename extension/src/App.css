@@ -1,15 +1,46 @@
+/* ניקוי ברירות מחדל */
 body {
-  width: 350px;
-  height: 520px; /* גובה קבוע שמתאים לתוכן */
   margin: 0;
   padding: 0;
-  overflow: hidden; /* מבטל את הגלילה */
-  background-color: #f9f9f9;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
+/* הקונטיינר הראשי של האפליקציה */
+.app-container {
+  width: 100%;
   height: 100%;
+  padding: 10px;
+  box-sizing: border-box; /* חשוב מאוד! דואג שה-Padding לא יגדיל את הרוחב */
+  text-align: center;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+
+/* עיצוב אזור המצלמה */
+.camera-wrapper {
+  position: relative;
+  flex: 1; /* לוקח את כל המקום הפנוי */
+  min-height: 200px;
+  max-height: 220px;
+  background-color: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* טקסט צף על המצלמה */
+.overlay-text {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
 }
