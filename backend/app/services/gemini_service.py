@@ -9,7 +9,8 @@ import time
 MODELS = [
     "models/gemini-2.5-flash",  # הכי חזק, אבל עלול להיות עמוס
     "models/gemini-2.0-flash",  # fallback יציב יותר
-    "models/gemini-2.5-pro"     # fallback נוסף אם צריך
+    "models/gemini-2.5-pro",    # fallback נוסף אם צריך
+    "gemini-flash-latest"
 ]
 
 async def get_gemini_answer(full_transcript: str, user_question: str) -> str:
@@ -21,22 +22,22 @@ async def get_gemini_answer(full_transcript: str, user_question: str) -> str:
         raise HTTPException(status_code=500, detail="Gemini service unavailable. API key missing or initialization failed.")
 
     prompt = (
-        f"You are a professional fact-checker, proofreader, and study assistant. "
-        f"The provided content is a raw automatic transcript which may contain recognition errors, especially with names, jargon, or song lyrics. "
-        f"Your task is a two-part process:\n\n"
+        f"You are an intelligent AI Research Agent. "
+        f"Your goal is to answer the user's question with maximum accuracy and depth.\n\n"
 
-        f"**TASK 1: TEXT CLEANING AND FACT-CHECKING (Use Search Tool as needed):**\n"
-        f"1. **Correction:** Review the provided TRANSCRIPT and correct all spelling, grammar, and context errors. Fix severe recognition errors to match the expected, correct phrasing.\n"
-        f"2. **Fact Check/Verification (Use Search Tool):** If the transcript contains technical terms, proper names, dates, or known works (like song lyrics), you MUST use the Google Search Tool to verify the accuracy and spelling of those elements.\n"
-        f"3. **Language:** Translate any foreign language segments (identified by [LANGUAGE_CODE] if present) into Hebrew, and use Hebrew for the final cleaned text.\n\n"
+        f"**Knowledge Sources:**\n"
+        f"1. **Primary Source (Context):** Use the provided VIDEO TRANSCRIPT to understand the specific topic being discussed.\n"
+        f"2. **Internal Knowledge:** Use your vast pre-trained knowledge to explain concepts, fill in gaps, and provide background information.\n"
+        f"3. **Real-time Search:** Use the Google Search Tool to verify names, find current data, or expand on topics mentioned in the video.\n\n"
 
-        f"**TASK 2: ANSWER USER QUESTION:**\n"
-        f"Based *only* on the clean, corrected, and verified text from TASK 1, answer the user's question clearly and completely.\n"
+        f"**Instructions:**\n"
+        f"- Combine all sources to provide a comprehensive answer in the language of the user's question.\n"
+        f"- If the transcript is the main focus, prioritize it, but feel free to add 'Extra Insights' from your own knowledge or the web.\n"
+        f"- Be precise, professional, and helpful.\n\n"
 
-        f"--- RAW TRANSCRIPT ---\n"
-        f"{full_transcript}\n\n"
-        f"--- USER QUESTION ---\n"
-        f"{user_question}"
+        f"--- DATA ---\n"
+        f"TRANSCRIPT: {full_transcript}\n"
+        f"USER QUESTION: {user_question}"
     )
 
     for model in MODELS:

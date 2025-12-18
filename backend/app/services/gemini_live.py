@@ -5,7 +5,7 @@ from fastapi import WebSocket
 class GeminiLiveService:
     def __init__(self):
         self.client = genai.Client(
-            api_key="AQ.Ab8RN6K7VQfaClW2WLnNbpyNKSAwaMW_lgjxN9hECTQdxOJ4dQ",
+            api_key="",
             http_options={'api_version': "v1alpha"}
         )
         self.model_id = "gemini-2.0-flash-exp"
@@ -37,4 +37,3 @@ class GeminiLiveService:
                     break
 
 
-#AQ.Ab8RN6JiSfOJuTsi8zx8mgk_AnY87Uojf69K_WLl--DSmLvnWw

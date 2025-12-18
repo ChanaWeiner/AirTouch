@@ -5,3 +5,4 @@ google-genai
 youtube-transcript-api
 requests
 faster-whisper
+gTTS

@@ -132,13 +132,18 @@ export default function App() {
 
     switch (gesture) {
       case "Open_Palm":
+        window.speechSynthesis.cancel(); // עוצר את הקול מיד
+        if (micState !== "idle") {
+          resetToIdle();
+          return;
+        }
         setStatusText("⏸️ Paused");
         sendCommandToYouTube("pause");
         commandSent = true;
         break;
 
       case "Closed_Fist":
-        if (isRecognitionActive.current) stopLiveMode();
+        // if (isRecognitionActive.current) stopLiveMode();
         setStatusText("▶️ Playing");
         sendCommandToYouTube("play");
         commandSent = true;
@@ -177,7 +182,7 @@ export default function App() {
         break;
 
       case "Pointing_Up":
-        activateLiveVoiceMode();
+        activateVoiceMode();
         break;
 
       default: break;
@@ -251,130 +256,180 @@ export default function App() {
   }
 
 
-// --- ניהול מיקרופון משופר ---
-// 1. הגדירי את המשתנה הזה מחוץ לפונקציה (ברמת הקובץ)
-const activateVoiceMode = () => {
-  // 2. בדיקת בטיחות כפולה
-  if (micState !== "idle" || isRecognitionActive.current) {
-    console.log("Recognition busy...");
-    return;
-  }
+  // --- ניהול מיקרופון משופר ---
+  // 1. הגדירי את המשתנה הזה מחוץ לפונקציה (ברמת הקובץ)
+  const activateVoiceMode = () => {
+    // 2. בדיקת בטיחות כפולה
+    if (micState !== "idle" || isRecognitionActive.current) {
+      console.log("Recognition busy...");
+      return;
+    }
 
-  sendCommandToYouTube("pause");
-  setMicState("listening");
-  setStatusText("🎙️ Listening...");
-  isRecognitionActive.current = true;
+    sendCommandToYouTube("pause");
+    setMicState("listening");
+    setStatusText("🎙️ Listening...");
+    isRecognitionActive.current = true;
 
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'he-IL';
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'he-IL';
 
-  recognition.onresult = async (event) => {
-    const transcript = event.results[0][0].transcript;
+    recognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
 
-    // ברגע שיש טקסט - עוצרים את המיקרופון ועוברים לחשוב
-    recognition.stop();
-    setMicState("thinking");
-    setStatusText("🧠 Thinking: " + transcript);
+      // ברגע שיש טקסט - עוצרים את המיקרופון ועוברים לחשוב
+      recognition.stop();
+      setMicState("thinking");
+      setStatusText("🧠 Thinking: " + transcript); //נוסיף כאן סימן טעינה
 
-    try {
-      const video_url = await getCurrentTabUrl();
-      const answer = await askGemini(video_url, transcript);
-      setStatusText("🤖 AI: " + answer);
-    } catch (err) {
-      console.error("API Error:", err);
-      setStatusText("❌ Error: Could not reach AI");
-    } finally {
-      // --- חזרה לשגרה אחרי שהתשובה חזרה (או נכשלה) ---
+      try {
+        const video_url = await getCurrentTabUrl();
+        const answer = await askGemini(video_url, transcript);
+        setStatusText("🤖 AI: " + answer);
+        console.log("AI Answer:", answer);
+
+        // --- כאן מפעילים את ההקראה ---
+        speakText(answer, () => {
+          console.log("Speech finished, returning to idle...");
+          resetToIdle();
+        });
+      } catch (err) {
+        console.error("API Error:", err);
+        setStatusText("❌ Error: Could not reach AI");
+      } finally {
+
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech Error:", event.error);
+      setStatusText(`❌ Mic Error: ${event.error}`);
+
+      // איפוס אוטומטי מהיר אחרי שגיאת מיקרופון (למשל אם לא שמעו כלום)
       setTimeout(() => {
         setMicState("idle");
         isRecognitionActive.current = false;
         setStatusText("Active! Show Hand ✋");
-      }, 8000); // מציג את התשובה ל-8 שניות ואז חוזר למצב רגיל
+      }, 3000);
+    };
+
+    recognition.onend = () => {
+      // אם הסתיים בלי תוצאה (למשל המשתמש שתק)
+      if (micState === "listening") {
+        isRecognitionActive.current = false;
+        setMicState("idle");
+        setStatusText("Active! Show Hand ✋");
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error("Start Error:", e);
+      isRecognitionActive.current = false;
+      setMicState("idle");
     }
   };
 
-  recognition.onerror = (event) => {
-    console.error("Speech Error:", event.error);
-    setStatusText(`❌ Mic Error: ${event.error}`);
+  const speakText = (text, onFinished) => {
+    // 1. זיהוי שפה אוטומטי (רג'קס שבודק אם יש תווים בעברית)
+    const isHebrew = /[\u0590-\u05FF]/.test(text);
+    const lang = isHebrew ? 'he' : 'en';
 
-    // איפוס אוטומטי מהיר אחרי שגיאת מיקרופון (למשל אם לא שמעו כלום)
-    setTimeout(() => {
-      setMicState("idle");
-      isRecognitionActive.current = false;
-      setStatusText("Active! Show Hand ✋");
-    }, 3000);
+    // 2. ניקוי סימני Markdown של Gemini (כמו כוכביות)
+    const cleanText = text.replace(/[*#]/g, "").trim();
+
+    // 3. יצירת הכתובת לשרת
+    const audioUrl = `http://localhost:8000/tts?text=${encodeURIComponent(cleanText)}&lang=${lang}`;
+    const audio = new Audio(audioUrl);
+
+    // 4. ניהול סיום ההקראה וחזרה ללופ
+    audio.onended = () => {
+      if (onFinished) onFinished();
+    };
+
+    audio.onerror = (e) => {
+      console.error("TTS Error:", e);
+      if (onFinished) onFinished();
+    };
+
+    // 5. ניגון
+    audio.play().catch(err => {
+      console.error("Audio play blocked:", err);
+      if (onFinished) onFinished();
+    });
   };
 
-  recognition.onend = () => {
-    // אם הסתיים בלי תוצאה (למשל המשתמש שתק)
-    if (micState === "listening") {
-      isRecognitionActive.current = false;
-      setMicState("idle");
-      setStatusText("Active! Show Hand ✋");
-    }
-  };
-
-  try {
-    recognition.start();
-  } catch (e) {
-    console.error("Start Error:", e);
-    isRecognitionActive.current = false;
+  const resetToIdle = () => {
+    window.speechSynthesis.cancel(); // עצירת הקראה אם קיימת
     setMicState("idle");
+    isRecognitionActive.current = false;
+    setStatusText("Active! Show Hand ✋");
+  };
+
+  if (appState === "permission_needed") {
+    return <PermissionScreen onAction={handlePermissionAction} isSetupTab={isSetupTab} />;
   }
-};
 
-if (appState === "permission_needed") {
-  return <PermissionScreen onAction={handlePermissionAction} isSetupTab={isSetupTab} />;
-}
+  return (
+    <div className="app-container">
+      <Header />
 
-return (
-  <div className="app-container">
-    <Header />
+      <div className="camera-wrapper">
+        {appState === "loading" && <span style={{ color: "white" }}>Starting Camera...</span>}
+        {appState === "error" && <span style={{ color: "red" }}>Error Loading AI</span>}
+        {appState === "running" && (
+          <>
+            <Webcam
+              ref={webcamRef}
+              style={{
+                width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)",
+                opacity: micState !== "idle" ? 0.3 : 1, // עמעום כשהמיקרופון עובד
+                transition: "opacity 0.5s"
+              }}
+            />
 
-    <div className="camera-wrapper">
-      {appState === "loading" && <span style={{ color: "white" }}>Starting Camera...</span>}
-      {appState === "error" && <span style={{ color: "red" }}>Error Loading AI</span>}
-      {appState === "running" && (
-        <>
-          <Webcam
-            ref={webcamRef}
-            style={{
-              width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)",
-              opacity: micState !== "idle" ? 0.3 : 1, // עמעום כשהמיקרופון עובד
-              transition: "opacity 0.5s"
-            }}
-          />
+            {/* אייקון מיקרופון ענק כשאנחנו במצב האזנה */}
+            {micState === "listening" && (
+              <div style={{ position: "absolute", fontSize: "60px", animation: "pulse 1s infinite" }}>🎙️</div>
+            )}
+            {micState === "thinking" && (
+              <div style={{ position: "absolute", fontSize: "60px", animation: "spin 1s infinite" }}>⏳</div>
+            )}
 
-          {/* אייקון מיקרופון ענק כשאנחנו במצב האזנה */}
-          {micState === "listening" && (
-            <div style={{ position: "absolute", fontSize: "60px", animation: "pulse 1s infinite" }}>🎙️</div>
-          )}
-          {micState === "thinking" && (
-            <div style={{ position: "absolute", fontSize: "60px", animation: "spin 1s infinite" }}>⏳</div>
-          )}
+            <div className="overlay-text">
+              👁️ {lastGesture}
+            </div>
+          </>
+        )}
+      </div>
 
-          <div className="overlay-text">
-            👁️ {lastGesture}
-          </div>
-        </>
-      )}
+      <div style={{
+        backgroundColor: micState !== "idle" ? "#e3f2fd" : (appState === "running" ? "#e8f5e9" : "#eee"),
+        color: micState !== "idle" ? "#1565c0" : (appState === "running" ? "#2e7d32" : "#777"),
+
+        // הגדרות למניעת גלילה חיצונית
+        minHeight: "50px",
+        maxHeight: "100px",      /* מגביל את גובה הטקסט כדי שלא ידחוף את הכפתורים החוצה */
+        padding: "8px 12px",
+
+        borderRadius: "10px",
+        margin: "5px 0",         /* צמצום מרווחים */
+        border: "1px solid #ddd",
+        fontSize: "14px",
+        lineHeight: "1.3",
+
+        overflowY: "auto",       /* גלילה רק *בתוך* התיבה אם Gemini חופר במיוחד */
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        direction: "rtl"
+      }}>
+        {statusText}
+      </div>
+
+      <Legend isActive={appState === "running" && micState === "idle"} />
+
     </div>
-
-    {/* הסטטוס מקבל צבע שונה אם אנחנו במצב מיקרופון */}
-    <div style={{
-      backgroundColor: micState !== "idle" ? "#e3f2fd" : (appState === "running" ? "#e8f5e9" : "#eee"),
-      color: micState !== "idle" ? "#1565c0" : (appState === "running" ? "#2e7d32" : "#777"),
-      padding: "6px", borderRadius: "6px", fontWeight: "bold",
-      margin: "8px 0",
-      border: "1px solid #ddd",
-      fontSize: "13px",
-      minHeight: "20px"
-    }}>
-      {statusText}
-    </div>
-
-    <Legend isActive={appState === "running" && micState === "idle"} />
-
-  </div>
-);
+  );
 }
