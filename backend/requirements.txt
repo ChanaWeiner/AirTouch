@@ -4,3 +4,4 @@ python-dotenv
 google-genai
 youtube-transcript-api
 requests
+faster-whisper

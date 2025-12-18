@@ -37,3 +37,14 @@ export const sendCommandToYouTube = (command, value = null) => {
     });
   }
 };
+
+export const getCurrentTabUrl = async () => {
+    // שליפת הטאב הפעיל בחלון הנוכחי
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (tab?.url) {
+        console.log("Current URL:", tab.url);
+        return tab.url;
+    }
+    return null;
+};

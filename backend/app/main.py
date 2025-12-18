@@ -1,17 +1,4 @@
-import requests
-import warnings
-from urllib3.exceptions import InsecureRequestWarning # עדכון קל לייבוא בגרסאות חדשות
-
-# --- תחילת המעקף של נתיב ---
-warnings.simplefilter('ignore', InsecureRequestWarning)
-
-old_request = requests.Session.request
-def new_request(self, method, url, *args, **kwargs):
-    kwargs['verify'] = False  # מבטל אימות SSL
-    return old_request(self, method, url, *args, **kwargs)
-
-requests.Session.request = new_request
-
+from app.api import websocket
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,11 +13,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(gemini_router.router)
+# app.include_router(gemini_router.router)
 # app.include_router(testings.router)
+app.include_router(websocket.router)
 @app.get("/")
 def read_root():
-    return {"message": "AirTouch Server is Running! (Clean Architecture)"}
+    return {"message": "AirTouch Server is Running!"}
 
 
 # בסוף קובץ app/main.py

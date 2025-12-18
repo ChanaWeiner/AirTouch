@@ -2,12 +2,20 @@
 from fastapi import HTTPException
 from google import genai
 from google.genai.errors import APIError
-
 from ..core.config import client
+import time
+
+# רשימת מודלים לפי עדיפות
+MODELS = [
+    "models/gemini-2.5-flash",  # הכי חזק, אבל עלול להיות עמוס
+    "models/gemini-2.0-flash",  # fallback יציב יותר
+    "models/gemini-2.5-pro"     # fallback נוסף אם צריך
+]
 
 async def get_gemini_answer(full_transcript: str, user_question: str) -> str:
     """
     שולח את הבקשה ל-Gemini API ומחזיר את התשובה.
+    כולל מנגנון fallback בין מודלים במקרה של overload או שגיאות.
     """
     if not client:
         raise HTTPException(status_code=500, detail="Gemini service unavailable. API key missing or initialization failed.")
@@ -31,22 +39,22 @@ async def get_gemini_answer(full_transcript: str, user_question: str) -> str:
         f"{user_question}"
     )
 
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[prompt],
-            config=genai.types.GenerateContentConfig(
-                tools=[{"googleSearch": {}}]
+    for model in MODELS:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=[prompt],
             )
-        )
-        if response.text:
-            return response.text
-        else:
-            return "Gemini did not return a valid answer."
-    except APIError as e:
-        # טיפול בשגיאות API ספציפיות (כמו 503 Overloaded)
-        print(f"Gemini API Error: {e}")
-        raise HTTPException(status_code=503, detail="Gemini service is currently overloaded. Please try again.")
-    except Exception as e:
-        print(f"Internal Service Error: {e}")
-        raise HTTPException(status_code=500, detail="An internal server error occurred.")
+            if response.text:
+                return response.text
+        except APIError as e:
+            # טיפול בשגיאות API ספציפיות (503 Overloaded)
+            print(f"{model} failed with APIError: {e}")
+            if "503" in str(e):
+                print("Waiting 2 seconds before trying next model...")
+                time.sleep(2)  # אפשר לשחק עם זמן ההמתנה
+        except Exception as e:
+            print(f"{model} failed with internal error: {e}")
+
+    # אם אף מודל לא ענה
+    raise HTTPException(status_code=503, detail="All Gemini models are currently unavailable. Please try again later.")
