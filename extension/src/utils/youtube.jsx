@@ -8,15 +8,42 @@ export const sendCommandToYouTube = (command, value = null) => {
           target: { tabId: tabs[0].id },
           func: (cmd, val) => {
             const video = document.querySelector('video');
-            
-            // כפתורי דילוג
+
+            // --- לוגיקה חכמה לדילוג (Skip Logic) ---
             if (cmd === 'skip') {
-                const skipBtn = document.querySelector('.ytp-ad-skip-button') || document.querySelector('.ytp-ad-skip-button-modern');
-                if (skipBtn) { skipBtn.click(); return; }
+                // 1. רשימת כל הכפתורים האפשריים לדילוג על פרסומת (יוטיוב משנים את זה כל הזמן)
+                const adSkipBtn = document.querySelector('.ytp-ad-skip-button') 
+                               || document.querySelector('.ytp-ad-skip-button-modern')
+                               || document.querySelector('.ytp-skip-ad-button')
+                               || document.querySelector('.ytp-ad-overlay-close-button'); // באנרים קופצים
+
+                if (adSkipBtn) {
+                    adSkipBtn.click();
+                    return; // הצלחנו לדלג על מודעה - עוצרים כאן!
+                }
+
+                // 2. בדיקת בטיחות: האם אנחנו בתוך פרסומת כרגע?
+                // יוטיוב מוסיפים מחלקה 'ad-showing' לנגן הראשי כשיש פרסומת
+                const player = document.querySelector('#movie_player');
+                const isAdPlaying = player && player.classList.contains('ad-showing');
+
+                if (isAdPlaying) {
+                    // אם אנחנו בפרסומת אבל לא מצאנו כפתור דילוג (למשל פרסומת של 5 שניות)
+                    // הפתרון: מריצים את הוידאו של הפרסומת לסוף שלו
+                    if (video) {
+                        video.currentTime = video.duration || 1000;
+                    }
+                    return; // חשוב מאוד! לא לעבור לסרטון הבא
+                }
+
+                // 3. רק אם אין שום מודעה - עוברים לסרטון הבא
                 const nextBtn = document.querySelector('.ytp-next-button');
-                if (nextBtn) { nextBtn.click(); return; }
+                if (nextBtn) { 
+                    nextBtn.click(); 
+                }
                 return;
             }
+            // --- סוף לוגיקת דילוג ---
 
             if (!video) return;
 
@@ -24,8 +51,6 @@ export const sendCommandToYouTube = (command, value = null) => {
                 case 'play': video.play(); break;
                 case 'pause': video.pause(); break;
                 case 'seek': video.currentTime += val; break;
-                
-                // לוגיקת המהירות (Toggle)
                 case 'toggleSpeed': 
                     video.playbackRate = (video.playbackRate <= 1) ? 2 : 1;
                     break;
