@@ -1,6 +1,10 @@
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 from fastapi import HTTPException
 from typing import List, Dict, Any
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+cookies_path = os.path.join(current_dir, 'cookies.txt')
 
 def extract_video_id(url: str) -> str:
     """
@@ -19,9 +23,18 @@ async def get_video_transcript(video_url: str)-> str:
     """
     try:
         video_id = extract_video_id(video_url)
+        # בדיקה שהקובץ קיים וקריא
+        try:
+            with open(cookies_path, 'r', encoding='utf-8') as f:
+                content = f.read(50)  # קורא רק את ההתחלה
+                print(f"✅ Cookies file is readable. Starts with: {content[:20]}...")
+        except Exception as e:
+            print(f"❌ Cannot read cookies file: {e}")
 
-        ytt_api = YouTubeTranscriptApi()
-        transcript_list = ytt_api.list(video_id)
+        transcript_list = YouTubeTranscriptApi.list_transcripts(
+            video_id,
+            cookies=os.path.abspath(cookies_path)
+        )
 
 
         try:
@@ -39,7 +52,7 @@ async def get_video_transcript(video_url: str)-> str:
         raw_data = fetched_transcript_object.to_raw_data()
 
         full_text = " ".join([item['text'] for item in raw_data])
-        print(full_text)
+        # print(full_text)
 
         return f"[LANGUAGE_CODE: {transcript_to_fetch.language_code}] {full_text}"
 

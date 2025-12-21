@@ -44,3 +44,33 @@ body {
   border-radius: 4px;
   font-size: 11px;
 }
+
+.voice-bars {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  height: 40px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.bar {
+  width: 4px;
+  height: 15px;
+  background-color: #4285f4;
+  border-radius: 2px;
+  animation: pulse-bar 0.6s infinite ease-in-out;
+}
+
+.bar:nth-child(2) { animation-delay: 0.1s; height: 25px; }
+.bar:nth-child(3) { animation-delay: 0.2s; height: 35px; }
+.bar:nth-child(4) { animation-delay: 0.3s; height: 25px; }
+.bar:nth-child(5) { animation-delay: 0.4s; height: 15px; }
+
+@keyframes pulse-bar {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.5); }
+}

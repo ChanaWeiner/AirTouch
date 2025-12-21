@@ -1,4 +1,4 @@
-.env
+# Python
 venv/
 venv_airtouch/
 .venv/
@@ -6,13 +6,39 @@ __pycache__/
 *.pyc
 *.pyd
 *.so
+
+# Environments
+.env
+*.local
+
+# Node / Frontend
 node_modules/
 build/
 dist/
+dist-ssr/
 out/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editors (VS Code, PyCharm, etc.)
+.vscode/*
+!.vscode/extensions.json
 .idea/
-.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System Files
 .DS_Store
 Thumbs.db
-*.log
-/logs/
+
+cookies.txt

@@ -2,6 +2,7 @@ from app.api import websocket
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.gemini_router import router as gemini_router
+from app.api.websocket import router as websocket_router
 app = FastAPI(title="AirTouch API")
 
 app.add_middleware(
@@ -9,12 +10,11 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Range", "Accept-Ranges"] # הוסיפי את השורה הזו
+    expose_headers=["Content-Range", "Accept-Ranges"]
 )
 
 app.include_router(gemini_router)
-# app.include_router(testings.router)
-# app.include_router(websocket.router)
+# app.include_router(websocket_router)
 @app.get("/")
 def read_root():
     return {"message": "AirTouch Server is Running!"}
