@@ -52,7 +52,7 @@ jobs:
         docker build -t temp-extension ./extension
         # יוצרים קונטיינר זמני כדי להעתיק ממנו את התיקייה הבנויה (למשל תיקיית dist או build)
         docker create --name temp-container temp-extension
-        docker cp temp-container:/dist ./extension-build
+        docker cp temp-container:/app/dist ./extension-build
         docker rm temp-container
 
     - name: Upload Extension Artifact
