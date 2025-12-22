@@ -45,3 +45,18 @@ jobs:
       if: github.event_name == 'push' && success()
       run: |
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest
+
+    - name: Build Extension with Docker
+      run: |
+        # בונים את האימג' רק כדי להפיק ממנו את הקבצים
+        docker build -t temp-extension ./extension
+        # יוצרים קונטיינר זמני כדי להעתיק ממנו את התיקייה הבנויה (למשל תיקיית dist או build)
+        docker create --name temp-container temp-extension
+        docker cp temp-container:/app/dist ./extension-build
+        docker rm temp-container
+
+    - name: Upload Extension Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: airtouch-extension-ready
+        path: ./extension-build/
