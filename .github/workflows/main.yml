@@ -39,4 +39,4 @@ jobs:
     - name: Push Image to Docker Hub
       if: github.event_name == 'push' && success()
       run: |
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest
+        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest python -m pytest
