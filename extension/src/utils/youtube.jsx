@@ -67,7 +67,6 @@ export const getCurrentTabUrl = async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (tab?.url) {
-        console.log("Current URL:", tab.url);
         return tab.url;
     }
     return null;

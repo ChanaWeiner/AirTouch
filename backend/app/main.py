@@ -1,8 +1,6 @@
-from app.api import websocket
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.gemini_router import router as gemini_router
-from app.api.websocket import router as websocket_router
 app = FastAPI(title="AirTouch API")
 
 app.add_middleware(

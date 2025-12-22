@@ -199,7 +199,14 @@ export default function App() {
       setStatusText("🎟️ Fetching Session...");
 
       // קריאה לשרת הפייתון שלך
-      const response = await fetch(`http://localhost:8000/gen-token?video_url=${encodeURIComponent(tabUrl)}`);
+      // הכתובת של התוסף עצמו תמיד תהיה chrome-extension://...
+      const isDevelopment = chrome.runtime.getURL('').includes('localhost') ||
+        !('update_url' in chrome.runtime.getManifest());
+      console.log("isDevelopment", isDevelopment);
+      const API_BASE_URL = isDevelopment
+        ? 'http://localhost:8000'
+        : 'https://airtouch-backend.onrender.com';
+      const response = await fetch(`${API_BASE_URL}/gen-token?video_url=${encodeURIComponent(tabUrl)}`);
       const data = await response.json();
 
       if (data.token) {
