@@ -1,5 +1,11 @@
 FROM python:3.12-slim
 
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 ADD https://netfree.link/dl/unix-ca.sh /home/netfree-unix-ca.sh 
 RUN cat /home/netfree-unix-ca.sh | sh
 
@@ -7,10 +13,6 @@ ENV REQUESTS_CA_BUNDLE=/etc/ca-bundle.crt
 ENV SSL_CERT_FILE=/etc/ca-bundle.crt
 
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
