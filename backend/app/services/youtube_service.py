@@ -3,8 +3,6 @@ from fastapi import HTTPException
 from typing import List, Dict, Any
 import os
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-cookies_path = os.path.join(current_dir, 'cookies.txt')
 
 def extract_video_id(url: str) -> str:
     """
@@ -24,17 +22,9 @@ async def get_video_transcript(video_url: str)-> str:
     try:
         video_id = extract_video_id(video_url)
         # בדיקה שהקובץ קיים וקריא
-        try:
-            with open(cookies_path, 'r', encoding='utf-8') as f:
-                content = f.read(50)  # קורא רק את ההתחלה
-                print(f"✅ Cookies file is readable. Starts with: {content[:20]}...")
-        except Exception as e:
-            print(f"❌ Cannot read cookies file: {e}")
-
-        transcript_list = YouTubeTranscriptApi.list_transcripts(
-            video_id,
-            cookies=os.path.abspath(cookies_path)
-        )
+        
+        ytt_api = YouTubeTranscriptApi()
+        transcript_list = ytt_api.list(video_id)
 
 
         try:
@@ -45,7 +35,6 @@ async def get_video_transcript(video_url: str)-> str:
                 raise NoTranscriptFound()
 
             transcript_to_fetch = all_transcripts[0]
-
             print(f"Warning: Using transcript in {transcript_to_fetch.language} - Gemini will translate.")
 
         fetched_transcript_object = transcript_to_fetch.fetch()
