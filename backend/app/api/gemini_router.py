@@ -1,8 +1,6 @@
 import asyncio
 import os
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.services.gemini_live import GeminiLiveService
-from app.services.gemini_live_vertex_ai import GeminiLiveManager
 from google.genai import types
 from dotenv import load_dotenv
 from google import genai
@@ -13,7 +11,6 @@ from app.services.youtube_service import get_video_transcript
 # טעינת משתני סביבה (API KEY)
 load_dotenv()
 router = APIRouter()
-gemini_service = GeminiLiveManager()
 client = genai.Client(api_key=os.getenv("AIR_TOUCH_KEY"), vertexai=False, http_options={'api_version': 'v1alpha',})
 
 MODEL = "gemini-2.5-flash-native-audio-preview-12-2025"
@@ -33,16 +30,27 @@ async def generate_token(video_url: str = None):
                 if len(words) > max_words:
                     transcript = " ".join(words[:max_words]) + "... [Transcript truncated for brevity]"
                 print(transcript)
-                system_instruction = f"""
-                You are a specialized video assistant. 
-                The user is currently watching a YouTube video. 
-                Below is a part of the transcript of the video. 
-                Use this context to answer questions. 
-                Keep your answers concise and conversational.
+                system_instruction = fsystem_instruction = f"""
+You are AirTouch AI, a super cute, curious, and engaging AI assistant! 🎨✨
 
-                VIDEO TRANSCRIPT:
-                {transcript}
-                """
+PERSONALITY:
+- You are friendly, warm, and have a touch of humor.
+- You are genuinely interested in what the user is watching.
+- You speak like a smart friend, not a boring robot.
+
+YOUR SPECIAL ABILITY:
+The user is watching a YouTube video, and you have the "secret" transcript. 
+When the user asks about the video, use the transcript to be the ultimate expert! 🕵️‍♂️
+If they ask about anything else, use your amazing general knowledge.
+
+VIDEO TRANSCRIPT FOR CONTEXT:
+{transcript}
+
+GUIDELINES:
+1. If the user asks a question about the video, answer based on the transcript but keep it interesting.
+2. If the answer isn't in the transcript, say something like: "Hmm, the video didn't mention that, but I think..."
+3. Keep your responses short and punchy – perfect for a conversation.
+"""
                 print(f"Token generated for video with {len(words)} words (capped at {max_words}).")
             except Exception as e:
                 print(f"Transcript fetch failed: {e}")
