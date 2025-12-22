@@ -32,7 +32,13 @@ jobs:
     # אנחנו מריצים את pytest בתוך הקונטיינר שבנינו עכשיו
     - name: Run Backend Tests
       run: |
-        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest python -m pytest
+        docker run --rm \
+          -e GEMINI_API_KEY="dummy_key" \
+          -e PYTHONPATH=/app \
+          -e SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+          -e REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+          ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest \
+          python -m pytest
     # 5. דחיפת ה-Image ל-Docker Hub (ה-CD)
     # השלב הזה יתבצע רק אם הטסטים עברו בהצלחה
     - name: Push Image to Docker Hub
