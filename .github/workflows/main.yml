@@ -32,11 +32,10 @@ jobs:
     # אנחנו מריצים את pytest בתוך הקונטיינר שבנינו עכשיו
     - name: Run Backend Tests
       run: |
-        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest pytest
-
+        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest python -m pytest
     # 5. דחיפת ה-Image ל-Docker Hub (ה-CD)
     # השלב הזה יתבצע רק אם הטסטים עברו בהצלחה
     - name: Push Image to Docker Hub
       if: github.event_name == 'push' && success()
       run: |
-        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest python -m pytest
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/airtouch-backend:latest
