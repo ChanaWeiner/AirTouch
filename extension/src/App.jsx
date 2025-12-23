@@ -184,6 +184,13 @@ export default function App() {
       // שימי לב: לא מגדיר setStatusText לטקסט, כי ה-UI יציג ספינר
       
       const tabUrl = await getCurrentTabUrl();
+
+      setStatusText("🎟️ Fetching Session...");
+
+      // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      API_BASE_URL = 'http://localhost:8000';
+      console.log("API_BASE_URL:", API_BASE_URL);
+
       const isDevelopment = chrome.runtime.getURL('').includes('localhost') || !('update_url' in chrome.runtime.getManifest());
       const API_BASE_URL = isDevelopment ? 'http://localhost:8000' : 'https://airtouch-backend.onrender.com';
       

@@ -32,7 +32,8 @@ async def get_video_transcript(video_url: str)-> str:
         except NoTranscriptFound:
             all_transcripts = list(transcript_list)
             if not all_transcripts:
-                raise NoTranscriptFound()
+                raise HTTPException(status_code=404,
+                                   detail="No direct or translatable transcript found for this video in available languages.")
 
             transcript_to_fetch = all_transcripts[0]
             print(f"Warning: Using transcript in {transcript_to_fetch.language} - Gemini will translate.")
