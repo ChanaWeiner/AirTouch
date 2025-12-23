@@ -2,11 +2,22 @@
   "manifest_version": 3,
   "name": "AirTouch Assistant",
   "version": "1.0",
+  "description": "AirTouch: Where hand gestures meet advanced AI.",
   "permissions": ["activeTab", "scripting"],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open AirTouch"
+    "default_title": "Open AirTouch",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"

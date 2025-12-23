@@ -1,76 +1,172 @@
-/* ניקוי ברירות מחדל */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap');
+
 body {
   margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family: 'Outfit', sans-serif;
+  background: #ffffff;
+  overflow: hidden;
 }
 
-/* הקונטיינר הראשי של האפליקציה */
 .app-container {
-  width: 100%;
-  height: 100%;
-  padding: 10px;
-  box-sizing: border-box; /* חשוב מאוד! דואג שה-Padding לא יגדיל את הרוחב */
-  text-align: center;
+  width: 360px;
+  height: 550px;
+  padding: 16px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-}
-
-/* עיצוב אזור המצלמה */
-.camera-wrapper {
+  background: #ffffff;
   position: relative;
-  flex: 1; /* לוקח את כל המקום הפנוי */
-  min-height: 200px;
-  max-height: 220px;
-  background-color: #000;
-  border-radius: 12px;
+}
+
+/* --- Header --- */
+.brand-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.logo-svg {
+  width: 200px;
+  height: auto;
+  /* פילטר עדין להבלטה */
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+/* --- Camera Frame & Loading Fix --- */
+.camera-frame {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 20px;
+  background: #0f172a;
   overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+  
+  /* פס סריקה שרץ על המצלמה כדי להראות שהיא מחפשת */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(66, 133, 244, 0.8), transparent);
+    animation: scan 3s linear infinite;
+    z-index: 10;
+  }
+}
+
+.webcam-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+/* תיקון מרכוז הטעינה - ממורכז אבסולוטית */
+.loader-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+/* --- Status Pill --- */
+.status-pill {
+  width: fit-content;
+  margin: 0 auto 20px auto;
+  padding: 8px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.status-pill.active {
+  background: #eff6ff;
+  color: #2563EB;
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  animation: pulse-border 2s infinite;
+}
+
+/* --- Legend Grid (אנימציות חיות) --- */
+.legend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.legend-item {
+  background: white;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  gap: 12px;
+  font-weight: 500;
+  color: #334155;
 }
 
-/* טקסט צף על המצלמה */
-.overlay-text {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
+/* אנימציה לידיים! כל אייקון יזוז קצת */
+.legend-item span:first-child {
+  font-size: 20px;
+  display: inline-block;
+  animation: wave-hand 3s ease-in-out infinite;
+  transform-origin: 70% 70%; /* ציר הסיבוב של היד */
 }
 
-.voice-bars {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  height: 40px;
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10;
+/* דיליי שונה לכל יד כדי שלא יזוזו ביחד כמו רובוטים */
+.legend-item:nth-child(1) span:first-child { animation-delay: 0s; }
+.legend-item:nth-child(2) span:first-child { animation-delay: 0.5s; }
+.legend-item:nth-child(3) span:first-child { animation-delay: 1s; }
+.legend-item:nth-child(4) span:first-child { animation-delay: 1.5s; }
+.legend-item:nth-child(5) span:first-child { animation-delay: 2s; }
+
+/* --- Spinners --- */
+.spinner { border-radius: 50%; animation: spin 1s linear infinite; }
+.spinner.white { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #fff; }
+.spinner.blue { width: 18px; height: 18px; border: 2px solid rgba(37, 99, 235, 0.1); border-top-color: #2563EB; }
+
+/* --- Animations --- */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes scan {
+  0% { top: 0; opacity: 0; }
+  50% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
 }
 
-.bar {
-  width: 4px;
-  height: 15px;
-  background-color: #4285f4;
-  border-radius: 2px;
-  animation: pulse-bar 0.6s infinite ease-in-out;
+@keyframes wave-hand {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); } /* נפנוף קטן */
 }
 
-.bar:nth-child(2) { animation-delay: 0.1s; height: 25px; }
-.bar:nth-child(3) { animation-delay: 0.2s; height: 35px; }
-.bar:nth-child(4) { animation-delay: 0.3s; height: 25px; }
-.bar:nth-child(5) { animation-delay: 0.4s; height: 15px; }
-
-@keyframes pulse-bar {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.5); }
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
+
+/* --- AI Overlay --- */
+.ai-immersive-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100vh; z-index: 99999;
+  background-color: #000000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ai-visual-box { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+gdm-live-audio { width: 100% !important; height: 100% !important; display: block; }
+.control-capsule {
+  position: absolute; bottom: 50px;
+  background: rgba(30,30,30,0.8); border: 1px solid rgba(255,255,255,0.1);
+  padding: 12px 24px; border-radius: 100px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  backdrop-filter: blur(20px); transition: transform 0.2s;
+}
+.control-capsule:hover { transform: scale(1.05); }
+.capsule-text { color: white; font-weight: 500; display: flex; align-items: center; gap: 10px; }

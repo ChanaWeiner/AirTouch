@@ -31,49 +31,33 @@ export class GdmLiveAudio extends LitElement {
   private scriptProcessorNode: ScriptProcessorNode;
   private sources = new Set<AudioBufferSourceNode>();
 
+  // --- השינוי העיקרי הוא כאן ב-Styles ---
   static styles = css`
-    #status {
-      position: absolute;
-      bottom: 5vh;
-      left: 0;
-      right: 0;
-      z-index: 10;
-      text-align: center;
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
     }
 
-    .controls {
-      z-index: 10;
-      position: absolute;
-      bottom: 10vh;
-      left: 0;
-      right: 0;
+    .container {
+      width: 100%;
+      height: 100%;
       display: flex;
-      align-items: center;
       justify-content: center;
-      flex-direction: column;
-      gap: 10px;
+      align-items: center;
+    }
 
-      button {
-        outline: none;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.1);
-        width: 64px;
-        height: 64px;
-        cursor: pointer;
-        font-size: 24px;
-        padding: 0;
-        margin: 0;
+    /* זה מבטיח שהקנבס של הבועה ימלא את כל המסך */
+    gdm-live-audio-visuals-3d {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-      }
-
-      button[disabled] {
-        display: none;
-      }
+    /* הסתרת אלמנטים פנימיים ישנים שלא צריך יותר */
+    #status, .controls {
+      display: none !important;
     }
   `;
 
@@ -85,7 +69,6 @@ export class GdmLiveAudio extends LitElement {
 
   constructor() {
     super();
-    // this.initClient();
   }
 
   private initAudio() {
@@ -165,7 +148,6 @@ export class GdmLiveAudio extends LitElement {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Orus' } },
-            // languageCode: 'en-GB'
           },
         },
       });
@@ -214,7 +196,6 @@ export class GdmLiveAudio extends LitElement {
       this.scriptProcessorNode.onaudioprocess = (audioProcessingEvent) => {
         if (!this.isRecording || !this.session) return;
 
-
         const inputBuffer = audioProcessingEvent.inputBuffer;
         const pcmData = inputBuffer.getChannelData(0);
 
@@ -225,7 +206,7 @@ export class GdmLiveAudio extends LitElement {
       this.scriptProcessorNode.connect(this.inputAudioContext.destination);
 
       this.isRecording = true;
-      this.updateStatus('🔴 Recording... Capturing PCM chunks.');
+      this.updateStatus('🔴 Recording...');
     } catch (err) {
       console.error('Error starting recording:', err);
       this.updateStatus(`Error: ${err.message}`);
@@ -254,17 +235,13 @@ export class GdmLiveAudio extends LitElement {
       this.mediaStream = null;
     }
 
-    this.updateStatus('Recording stopped. Click Start to begin again.');
+    this.updateStatus('Recording stopped.');
   }
 
-  // הוסיפי את זה מתחת ל-reset בקובץ ה-TS
   public async terminateSession() {
     console.log("Terminating session and cleaning up...");
-
-    // 1. עצירת הקלטה
     this.stopRecording();
 
-    // 2. סגירה מפורשת של ה-WebSocket
     if (this.session) {
       try {
         this.session.close();
@@ -274,14 +251,11 @@ export class GdmLiveAudio extends LitElement {
       this.session = null;
     }
 
-    // 3. עצירת כל מקורות השמע הפעילים
     this.sources.forEach(source => {
       try { source.stop(); } catch (e) { }
     });
     this.sources.clear();
 
-    // 4. השתקת ה-Audio Contexts (חשוב מאוד!)
-    // אם לא נסגור אותם, המיקרופון עלול להישאר "תפוס" בדפדפן
     if (this.inputAudioContext.state !== 'closed') {
       await this.inputAudioContext.suspend();
     }
@@ -290,11 +264,9 @@ export class GdmLiveAudio extends LitElement {
   }
 
   disconnectedCallback() {
-    console.log("👋 הקומפוננטה הוסרה - סוגר הכל...");
     super.disconnectedCallback();
-    this.terminateSession(); // יתבצע אוטומטית כש-React יסיר את האלמנט
+    this.terminateSession();
   }
-
 
   private reset() {
     this.session?.close();
@@ -302,57 +274,15 @@ export class GdmLiveAudio extends LitElement {
     this.updateStatus('Session cleared.');
   }
 
+  // --- ה-Render החדש והנקי ---
   render() {
     return html`
-      <div>
-      <div id="status"> ${this.error} </div>
+      <div class="container">
         <gdm-live-audio-visuals-3d
           .inputNode=${this.inputNode}
-          .outputNode=${this.outputNode}></gdm-live-audio-visuals-3d>
+          .outputNode=${this.outputNode}>
+        </gdm-live-audio-visuals-3d>
       </div>
     `;
   }
 }
-
-{/* <div class="controls">
-          <button
-            id="resetButton"
-            @click=${this.reset}
-            ?disabled=${this.isRecording}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="40px"
-              viewBox="0 -960 960 960"
-              width="40px"
-              fill="#ffffff">
-              <path
-                d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z" />
-            </svg>
-          </button>
-          <button
-            id="startButton"
-            @click=${this.startRecording}
-            ?disabled=${this.isRecording}>
-            <svg
-              viewBox="0 0 100 100"
-              width="32px"
-              height="32px"
-              fill="#c80000"
-              xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="50" r="50" />
-            </svg>
-          </button>
-          <button
-            id="stopButton"
-            @click=${this.stopRecording}
-            ?disabled=${!this.isRecording}>
-            <svg
-              viewBox="0 0 100 100"
-              width="32px"
-              height="32px"
-              fill="#000000"
-              xmlns="http://www.w3.org/2000/svg">
-              <rect x="0" y="0" width="100" height="100" rx="15" />
-            </svg>
-          </button>
-        </div> */}

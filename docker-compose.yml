@@ -10,17 +10,4 @@ services:
       - PORT=8000
       - PYTHONPATH=/app
 
-  extension:
-    build: ./extension
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./extension:/app
-      - /app/node_modules
-    environment:
-      # זה הקסם: גורם ל-Vite לזהות שינויי קבצים בווינדוס (Polling)
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - VITE_API_URL=http://localhost:8000
-    depends_on:
-      - backend
+  

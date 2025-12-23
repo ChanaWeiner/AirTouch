@@ -1,7 +1,7 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
-*/
+ */
 /* tslint:disable */
 
 import {LitElement, css, html} from 'lit';
@@ -41,15 +41,36 @@ export class GdmLiveAudioVisuals extends LitElement {
   private canvasCtx: CanvasRenderingContext2D;
 
   static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
     canvas {
-      width: 400px;
-      aspect-ratio: 1 / 1;
+      width: 100%;
+      height: 100%;
+      display: block; /* מונע פסים לבנים */
     }
   `;
 
   connectedCallback() {
     super.connectedCallback();
+    // הוספתי האזנה לשינוי גודל חלון כדי לתקן רזולוציה בזמן אמת
+    window.addEventListener('resize', this.handleResize.bind(this));
     this.visualize();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('resize', this.handleResize.bind(this));
+  }
+
+  // פונקציה חדשה שמתאימה את הרזולוציה לגודל המסך
+  private handleResize() {
+    if (this.canvas) {
+      this.canvas.width = this.canvas.clientWidth * window.devicePixelRatio;
+      this.canvas.height = this.canvas.clientHeight * window.devicePixelRatio;
+    }
   }
 
   private visualize() {
@@ -61,8 +82,9 @@ export class GdmLiveAudioVisuals extends LitElement {
       const HEIGHT = canvas.height;
 
       canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-      canvasCtx.fillStyle = '#1f2937';
-      canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      // הפכתי את הרקע לשקוף כדי שיראו את הרקע היפה שעשינו ב-App.css
+      // canvasCtx.fillStyle = '#1f2937'; 
+      // canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
 
       const barWidth = WIDTH / this.outputAnalyser.data.length;
       let x = 0;
@@ -101,14 +123,15 @@ export class GdmLiveAudioVisuals extends LitElement {
     requestAnimationFrame(() => this.visualize());
   }
 
-  private firstUpdated() {
+  // כאן נקרא לפונקציית שינוי הגודל בפעם הראשונה
+  firstUpdated() {
     this.canvas = this.shadowRoot!.querySelector('canvas');
-    this.canvas.width = 400;
-    this.canvas.height = 400;
     this.canvasCtx = this.canvas.getContext('2d');
+    this.handleResize(); // הגדרת רזולוציה ראשונית
   }
 
-  private render() {
+  // הסרתי את ה-private
+  render() {
     return html`<canvas></canvas>`;
   }
 }
