@@ -76,7 +76,6 @@ export default function App() {
   };
 
   const startMediaPipe = async () => {
-    // כאן לא צריך טקסט כי המצלמה בטעינה ממילא מציגה ספינר
     try {
       const wasmUrl = chrome.runtime.getURL("wasm/");
       const vision = await FilesetResolver.forVisionTasks(wasmUrl);
@@ -176,12 +175,11 @@ export default function App() {
     setStatusText("Ready");
   };
 
-  const activateLiveVoiceMode = async () => {
+ const activateLiveVoiceMode = async () => {
     try {
       if (isAiActiveRef.current || isConnecting) return;
       isAiActiveRef.current = true;
       setIsConnecting(true);
-      // שימי לב: לא מגדיר setStatusText לטקסט, כי ה-UI יציג ספינר
       
       const tabUrl = await getCurrentTabUrl();
       const currentTime = await getYoutubeCurrentTime();
@@ -238,7 +236,6 @@ export default function App() {
       <Header />
       
       <div className="camera-frame">
-        {/* --- טעינה ראשונית של המצלמה: ספינר לבן במקום טקסט --- */}
         {appState === "loading" && (
             <div className="loader-center">
                 <div className="spinner white"></div>
@@ -253,7 +250,6 @@ export default function App() {
             
             {!isAiActive && (
               <div className="gesture-badge">
-                 {/* כאן אפשר להשאיר את המחוון הישן או לשים ספינר אם רוצים */}
                  {isConnecting ? (
                      <div className="spinner blue" style={{width:16, height:16}}></div>
                  ) : (
@@ -269,7 +265,6 @@ export default function App() {
       </div>
 
       <div className={statusClass}>
-        {/* --- טעינת חיבור ל-AI: ספינר כחול במקום טקסט --- */}
         {isConnecting ? (
             <div className="spinner blue"></div>
         ) : (
