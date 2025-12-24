@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from typing import List, Dict, Any
 import os
 
+TRANSCRIPT_CACHE: Dict[str, str] = {}
 
 def extract_video_id(url: str) -> str:
     """
@@ -21,7 +22,9 @@ async def get_video_transcript(video_url: str)-> str:
     """
     try:
         video_id = extract_video_id(video_url)
-        # בדיקה שהקובץ קיים וקריא
+        if video_id in TRANSCRIPT_CACHE:
+            print(f"Returning cached transcript for video_id: {video_id}")
+            return TRANSCRIPT_CACHE[video_id]
         
         ytt_api = YouTubeTranscriptApi()
         transcript_list = ytt_api.list(video_id)
@@ -38,13 +41,28 @@ async def get_video_transcript(video_url: str)-> str:
             transcript_to_fetch = all_transcripts[0]
             print(f"Warning: Using transcript in {transcript_to_fetch.language} - Gemini will translate.")
 
-        fetched_transcript_object = transcript_to_fetch.fetch()
-        raw_data = fetched_transcript_object.to_raw_data()
+        # fetched_transcript_object = transcript_to_fetch.fetch()
+        # raw_data = fetched_transcript_object.to_raw_data()
 
-        full_text = " ".join([item['text'] for item in raw_data])
-        # print(full_text)
+        # full_text = " ".join([item['text'] for item in raw_data])
 
-        return f"[LANGUAGE_CODE: {transcript_to_fetch.language_code}] {full_text}"
+        # result = f"[LANGUAGE_CODE: {transcript_to_fetch.language_code}] {full_text}"
+
+        raw_data = transcript_to_fetch.fetch().to_raw_data()
+
+        formatted_segments = []
+        for item in raw_data:
+            start_time = int(item['start'])
+            text = item['text'].replace("\n", " ")
+            formatted_segments.append(f"[{start_time}s] {text}")
+
+        full_text_with_timestamps = " ".join(formatted_segments)
+
+        result = f"[LANGUAGE_CODE: {transcript_to_fetch.language_code}] {full_text_with_timestamps}"
+
+        TRANSCRIPT_CACHE[video_id] = result
+
+        return result
 
     except TranscriptsDisabled:
         raise HTTPException(status_code=404,

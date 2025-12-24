@@ -4,7 +4,7 @@ import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
 import Header from "./components/Header";
 import Legend from "./components/Legend";
 import PermissionScreen from "./components/PermissionScreen";
-import { sendCommandToYouTube, getCurrentTabUrl } from "./utils/youtube";
+import { sendCommandToYouTube, getCurrentTabUrl, getYoutubeCurrentTime } from "./utils/youtube";
 import "./App.css";
 import "./gdm/gdm-live-audio";
 
@@ -179,22 +179,21 @@ export default function App() {
   const activateLiveVoiceMode = async () => {
     try {
       if (isAiActiveRef.current || isConnecting) return;
-      
+      isAiActiveRef.current = true;
       setIsConnecting(true);
       // שימי לב: לא מגדיר setStatusText לטקסט, כי ה-UI יציג ספינר
       
       const tabUrl = await getCurrentTabUrl();
+      const currentTime = await getYoutubeCurrentTime();
+      console.log("Current Time:", currentTime);
 
       setStatusText("🎟️ Fetching Session...");
 
       // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      API_BASE_URL = 'http://localhost:8000';
+      const API_BASE_URL = 'http://localhost:8000';
       console.log("API_BASE_URL:", API_BASE_URL);
-
-      const isDevelopment = chrome.runtime.getURL('').includes('localhost') || !('update_url' in chrome.runtime.getManifest());
-      const API_BASE_URL = isDevelopment ? 'http://localhost:8000' : 'https://airtouch-backend.onrender.com';
       
-      const response = await fetch(`${API_BASE_URL}/gen-token?video_url=${encodeURIComponent(tabUrl)}`);
+      const response = await fetch(`${API_BASE_URL}/gen-token?video_url=${encodeURIComponent(tabUrl)}&current_time=${currentTime}`);
       const data = await response.json();
 
       if (data.token) {

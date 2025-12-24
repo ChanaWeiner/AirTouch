@@ -3,7 +3,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
+declare var chrome: any;
 import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
 import { LitElement, css, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
@@ -91,7 +91,7 @@ export class GdmLiveAudio extends LitElement {
   }
 
   private async initSession() {
-    const model = 'gemini-2.5-flash-native-audio-preview-09-2025';
+    const model = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
     try {
       this.session = await this.client.live.connect({
@@ -101,6 +101,39 @@ export class GdmLiveAudio extends LitElement {
             this.updateStatus('Opened');
           },
           onmessage: async (message: LiveServerMessage) => {
+            console.log("📩 Message received from Gemini:", message);
+
+            // חילוץ ה-toolCall לפי המבנה שראינו בלוג שלך
+            const toolCall = (message as any).toolCall;
+
+            if (toolCall && toolCall.functionCalls) {
+              const call = toolCall.functionCalls.find((fc: any) => fc.name === 'jump_to_video_timestamp');
+
+              if (call && call.args) {
+                const seconds = Number(call.args.timestamp_seconds);
+                console.log("🚀 AirTouch: Preparing to jump to:", seconds);
+
+                // כאן אנחנו משתמשים בשיטה שעובדת לך טוב:
+                if (typeof chrome !== "undefined" && chrome.tabs) {
+                  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    if (tabs[0]?.id) {
+                      chrome.scripting.executeScript({
+                        target: { tabId: tabs[0].id },
+                        func: (targetSeconds) => {
+                          const video = document.querySelector('video');
+                          if (video) {
+                            video.currentTime = targetSeconds;
+                            console.log("✅ Jumped to " + targetSeconds + " inside YouTube tab");
+                          }
+                        },
+                        args: [seconds] // העברת הפרמטר לפונקציה המוזרקת
+                      });
+                    }
+                  });
+                }
+              }
+            }
+
             const audio =
               message.serverContent?.modelTurn?.parts[0]?.inlineData;
 

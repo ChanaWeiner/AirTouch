@@ -71,3 +71,25 @@ export const getCurrentTabUrl = async () => {
     }
     return null;
 };
+
+
+export const getYoutubeCurrentTime = async () => {
+  if (typeof chrome !== "undefined" && chrome.tabs) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (tab?.id) {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const video = document.querySelector('video');
+          return video ? Math.floor(video.currentTime) : 0;
+        },
+      });
+
+      // executeScript מחזיר מערך של תוצאות (אחת לכל פריים/טאב)
+      // אנחנו לוקחים את התוצאה מהפריים הראשי
+      return results[0]?.result || 0;
+    }
+  }
+  return 0;
+};
