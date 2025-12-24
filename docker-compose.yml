@@ -14,7 +14,6 @@ services:
     build:
       context: ./extension
       args:
-        # כאן אנחנו מזריקים את המשתנה לתהליך הבנייה של הדוקר
         - VITE_API_URL=https://airtouch-backend.onrender.com
     ports:
       - "5173:5173"
@@ -23,7 +22,6 @@ services:
       - ./extension/dist:/app/dist
       - /app/node_modules
     environment:
-      # זה הקסם: גורם ל-Vite לזהות שינויי קבצים בווינדוס (Polling)
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - VITE_API_URL=https://airtouch-backend.onrender.com
