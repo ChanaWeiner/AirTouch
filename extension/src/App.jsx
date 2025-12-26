@@ -187,9 +187,7 @@ export default function App() {
 
       setStatusText("🎟️ Fetching Session...");
 
-      // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const API_BASE_URL = 'http://localhost:8000';
-      console.log("API_BASE_URL:", API_BASE_URL);
       
       const response = await fetch(`${API_BASE_URL}/gen-token?video_url=${encodeURIComponent(tabUrl)}&current_time=${currentTime}`);
       const data = await response.json();

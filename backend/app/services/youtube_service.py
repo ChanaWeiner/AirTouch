@@ -41,13 +41,6 @@ async def get_video_transcript(video_url: str)-> str:
             transcript_to_fetch = all_transcripts[0]
             print(f"Warning: Using transcript in {transcript_to_fetch.language} - Gemini will translate.")
 
-        # fetched_transcript_object = transcript_to_fetch.fetch()
-        # raw_data = fetched_transcript_object.to_raw_data()
-
-        # full_text = " ".join([item['text'] for item in raw_data])
-
-        # result = f"[LANGUAGE_CODE: {transcript_to_fetch.language_code}] {full_text}"
-
         raw_data = transcript_to_fetch.fetch().to_raw_data()
 
         formatted_segments = []

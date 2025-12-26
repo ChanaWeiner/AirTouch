@@ -79,8 +79,6 @@ export const getYoutubeCurrentTime = async () => {
         },
       });
 
-      // executeScript מחזיר מערך של תוצאות (אחת לכל פריים/טאב)
-      // אנחנו לוקחים את התוצאה מהפריים הראשי
       return results[0]?.result || 0;
     }
   }

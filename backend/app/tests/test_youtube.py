@@ -3,6 +3,14 @@ from unittest.mock import patch, MagicMock
 from fastapi import HTTPException
 from youtube_transcript_api import TranscriptsDisabled, NoTranscriptFound
 from app.services.youtube_service import get_video_transcript, extract_video_id
+import pytest
+from app.services.youtube_service import TRANSCRIPT_CACHE # ייבוא המילון הגלובלי
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    """מנקה את ה-Cache לפני כל טסט כדי למנוע זיהום בין בדיקות"""
+    TRANSCRIPT_CACHE.clear()
+    yield
 
 def test_extract_video_id_valid():
     """בודק חילוץ ID תקין משני סוגי URL נפוצים"""
@@ -20,27 +28,27 @@ def test_extract_video_id_invalid():
 @patch("app.services.youtube_service.YouTubeTranscriptApi")
 async def test_get_video_transcript_success(mock_api_class):
     """
-    בודק שהפונקציה מצליחה לחבר את הטקסט מהתמלול בצורה נכונה.
+    בודק שהפונקציה מצליחה לחבר את הטקסט מהתמלול בצורה נכונה עם זמנים.
     """
-    # יצירת מוק לאובייקט הטרנסקריפט הבודד
     mock_transcript = MagicMock()
     mock_transcript.language_code = "he"
+    
     mock_transcript.fetch.return_value.to_raw_data.return_value = [
-        {"text": "שלום"}, {"text": "לכולם"}
+        {"text": "שלום", "start": 0.0, "duration": 2.0},
+        {"text": "לכולם", "start": 2.5, "duration": 1.5}
     ]
 
-    # יצירת מוק לרשימת הטרנסקריפטים שחוזרת מ-list()
     mock_list_obj = MagicMock()
     mock_list_obj.find_transcript.return_value = mock_transcript
     
-    # הגדרת ה-Instance של ה-API שיחזיר את הרשימה
     mock_api_instance = mock_api_class.return_value
     mock_api_instance.list.return_value = mock_list_obj
 
     result = await get_video_transcript("https://youtu.be/test_id")
 
     assert "[LANGUAGE_CODE: he]" in result
-    assert "שלום לכולם" in result
+    assert "[0s] שלום" in result
+    assert "[2s] לכולם" in result
 
 @pytest.mark.asyncio
 @patch("app.services.youtube_service.YouTubeTranscriptApi")
